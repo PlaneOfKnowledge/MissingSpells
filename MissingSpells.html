@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EverQuest Missing Spells Checklist</title>
+<style>
+  :root {
+    --bg: #14110d;
+    --panel: #1f1a13;
+    --panel-2: #2a2317;
+    --border: #4a3d28;
+    --text: #e8dcc0;
+    --muted: #b09b73;
+    --accent: #d9a441;
+    --accent-dim: #8a6a24;
+    --row-alt: #241e15;
+    --done: #5a4a2a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Segoe UI", Tahoma, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 15px;
+  }
+  header {
+    padding: 18px 24px;
+    background: linear-gradient(180deg, #2a2014, #1a150e);
+    border-bottom: 2px solid var(--accent-dim);
+  }
+  h1 {
+    margin: 0;
+    font-size: 22px;
+    color: var(--accent);
+    letter-spacing: 0.5px;
+    text-shadow: 0 1px 2px #000;
+  }
+  .sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    padding: 14px 24px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 5;
+  }
+  .toolbar label.filebtn {
+    background: var(--accent);
+    color: #2a1d05;
+    font-weight: 600;
+    padding: 8px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    border: 1px solid var(--accent-dim);
+  }
+  .toolbar label.filebtn:hover { background: #e9b450; }
+  input[type="file"] { display: none; }
+  #search {
+    flex: 1 1 220px;
+    min-width: 160px;
+    padding: 8px 10px;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  #search::placeholder { color: var(--muted); }
+  .btn {
+    background: var(--panel-2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+  }
+  .btn:hover { border-color: var(--accent-dim); color: var(--accent); }
+  .lvlrange { color: var(--muted); font-size: 13px; display: inline-flex; align-items: center; gap: 6px; }
+  .lvlinput {
+    width: 60px;
+    padding: 7px 8px;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  .lvlinput::placeholder { color: var(--muted); }
+  .stats {
+    padding: 10px 24px;
+    color: var(--muted);
+    font-size: 13px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+  }
+  .stats b { color: var(--accent); }
+  .wrap { padding: 0 0 60px 0; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    position: sticky;
+    top: 56px;
+    background: var(--panel-2);
+    color: var(--muted);
+    text-align: left;
+    padding: 10px 14px;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    border-bottom: 2px solid var(--border);
+    user-select: none;
+  }
+  thead th.sortable { cursor: pointer; }
+  thead th.sortable:hover { color: var(--accent); }
+  th .arrow { color: var(--accent); font-size: 11px; }
+  td { padding: 8px 14px; border-bottom: 1px solid #2a2317; }
+  tbody tr:nth-child(even) { background: var(--row-alt); }
+  tbody tr.checked { background: var(--done); }
+  td.name a { color: var(--text); text-decoration: none; border-bottom: 1px dotted var(--accent-dim); }
+  td.name a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+  tbody tr.checked td.name a { text-decoration: line-through; color: var(--muted); border-bottom: none; }
+  td.chk { width: 38px; text-align: center; }
+  td.lvl { width: 70px; text-align: center; color: var(--accent); font-weight: 600; }
+  td.rank { width: 70px; text-align: center; color: var(--muted); font-weight: 600; }
+  td.rank.none { color: #5a4d33; }
+  input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--accent); }
+  .empty { padding: 50px 24px; text-align: center; color: var(--muted); }
+  .empty code { color: var(--accent); }
+  footer { padding: 14px 24px; color: #6f5e3e; font-size: 12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>EverQuest &mdash; Missing Spells Checklist</h1>
+  <div class="sub">Load a <code>*-MissingSpells.txt</code> file, sort &amp; search, and tick off spells. Your checkmarks are saved per file name.</div>
+</header>
+
+<div class="toolbar">
+  <label class="filebtn">Load File&hellip;<input type="file" id="fileInput" accept=".txt,text/plain"></label>
+  <input type="text" id="search" placeholder="Search spells by name or level&hellip;" disabled>
+  <select id="rankFilter" class="btn" disabled>
+    <option value="">All ranks</option>
+  </select>
+  <span class="lvlrange">
+    Lvl
+    <input type="number" id="lvlMin" class="lvlinput" placeholder="min" min="1" disabled>
+    &ndash;
+    <input type="number" id="lvlMax" class="lvlinput" placeholder="max" min="1" disabled>
+  </span>
+  <button class="btn" id="clearFilters" disabled>Clear Filters</button>
+  <button class="btn" id="uncheckAll" disabled>Uncheck All</button>
+</div>
+
+<div class="stats" id="stats">No file loaded.</div>
+
+<div class="wrap">
+  <table id="table" hidden>
+    <thead>
+      <tr>
+        <th class="chk">&#10003;</th>
+        <th class="lvl sortable" data-sort="level">Level <span class="arrow" id="arrow-level"></span></th>
+        <th class="rank sortable" data-sort="rank">Rank <span class="arrow" id="arrow-rank"></span></th>
+        <th class="sortable" data-sort="name">Spell <span class="arrow" id="arrow-name"></span></th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+  <div class="empty" id="empty">
+    Click <b>Load File&hellip;</b> and choose a file such as
+    <code>Aleran_teek-ENC-MissingSpells.txt</code>.
+  </div>
+</div>
+
+<footer>
+  Checkmark state is stored under the file's name (cookie + browser local storage), so reloading the same
+  file restores your progress.
+</footer>
+
+<script>
+"use strict";
+
+// ---- State ----
+var spells = [];            // { level:Number, name:String, id:String }
+var currentFile = "";       // loaded file name (storage key)
+var checked = {};           // id -> true
+var sortKey = "level";      // "level" | "name"
+var sortDir = 1;            // 1 asc, -1 desc
+
+// ---- Persistence (cookie primary, localStorage mirror) ----
+// Spells are identified by a short hash of "level|name" so the cookie stays
+// small even for hundreds of entries.
+function hashId(level, name) {
+  var s = level + "|" + name;
+  var h = 5381;
+  for (var i = 0; i < s.length; i++) {
+    h = ((h << 5) + h + s.charCodeAt(i)) | 0; // djb2
+  }
+  return (h >>> 0).toString(36);
+}
+
+function storageKey(fileName) {
+  return "eqspells_" + fileName.replace(/[^A-Za-z0-9_.-]/g, "_");
+}
+
+function setCookie(name, value) {
+  try {
+    var maxAge = 60 * 60 * 24 * 365 * 5; // 5 years
+    document.cookie = name + "=" + encodeURIComponent(value) +
+      ";path=/;max-age=" + maxAge + ";SameSite=Lax";
+  } catch (e) { /* file:// may block cookies; localStorage covers us */ }
+}
+
+function getCookie(name) {
+  try {
+    var parts = document.cookie ? document.cookie.split(";") : [];
+    for (var i = 0; i < parts.length; i++) {
+      var p = parts[i].trim();
+      if (p.indexOf(name + "=") === 0) {
+        return decodeURIComponent(p.substring(name.length + 1));
+      }
+    }
+  } catch (e) {}
+  return null;
+}
+
+function saveState() {
+  if (!currentFile) return;
+  var ids = Object.keys(checked).filter(function (k) { return checked[k]; });
+  var value = ids.join(",");
+  var key = storageKey(currentFile);
+  setCookie(key, value);
+  try { localStorage.setItem(key, value); } catch (e) {}
+}
+
+function loadState(fileName) {
+  var key = storageKey(fileName);
+  var value = getCookie(key);
+  if (value === null || value === "") {
+    try { value = localStorage.getItem(key); } catch (e) { value = null; }
+  }
+  var map = {};
+  if (value) {
+    value.split(",").forEach(function (id) { if (id) map[id] = true; });
+  }
+  return map;
+}
+
+// ---- Parsing ----
+// Each line: <level> TAB <spell name>. The first field is the spell level and
+// the remainder of the line is the name. A trailing "Rk. II" / "Rk. III" on the
+// name is pulled out into a separate rank; names with no such suffix are
+// treated as rank I (or "no rank" for non-spell entries like illusions).
+var ROMAN = { I: 1, II: 2, III: 3, IV: 4, V: 5, VI: 6 };
+
+function parseFile(text) {
+  var out = [];
+  var lines = text.split(/\r?\n/);
+  for (var i = 0; i < lines.length; i++) {
+    var raw = lines[i];
+    if (!raw || !raw.trim()) continue;
+    // Split on the first run of whitespace (tab or spaces): level, then name.
+    var m = raw.replace(/\s+$/, "").match(/^\s*(\d+)\s+(.+)$/);
+    if (!m) continue;
+    var level = parseInt(m[1], 10);
+    var fullName = m[2].trim();
+    if (!fullName || isNaN(level)) continue;
+
+    // Pull a trailing "Rk. <roman>" suffix off the name, if present.
+    var rankLabel = "";   // "", "I", "II", ...
+    var rankNum = 0;      // 0 = no explicit rank
+    var name = fullName;
+    var rm = fullName.match(/^(.*?)\s+Rk\.?\s*([IVX]+)\s*$/i);
+    if (rm && ROMAN[rm[2].toUpperCase()]) {
+      name = rm[1].trim();
+      rankLabel = rm[2].toUpperCase();
+      rankNum = ROMAN[rankLabel];
+    }
+    // Hash the ORIGINAL full name so saved checkmarks stay stable.
+    out.push({
+      level: level,
+      name: name,
+      rank: rankLabel,
+      rankNum: rankNum,
+      id: hashId(level, fullName)
+    });
+  }
+  return out;
+}
+
+// ---- Rendering ----
+var tbody = document.getElementById("tbody");
+var table = document.getElementById("table");
+var emptyEl = document.getElementById("empty");
+var statsEl = document.getElementById("stats");
+var searchEl = document.getElementById("search");
+
+function currentQuery() {
+  return searchEl.value.trim().toLowerCase();
+}
+
+// Build the rank filter options from the ranks actually present in the file.
+function populateRankFilter() {
+  var sel = document.getElementById("rankFilter");
+  var hasNum = {};   // rankNum -> true
+  spells.forEach(function (s) { hasNum[s.rankNum] = true; });
+  var prev = sel.value;
+  sel.innerHTML = "";
+  var optAll = document.createElement("option");
+  optAll.value = ""; optAll.textContent = "All ranks";
+  sel.appendChild(optAll);
+  [1, 2, 3, 4, 5, 6].forEach(function (n) {
+    if (!hasNum[n]) return;
+    var roman = Object.keys(ROMAN).filter(function (k) { return ROMAN[k] === n; })[0];
+    var o = document.createElement("option");
+    o.value = String(n); o.textContent = "Rk. " + roman;
+    sel.appendChild(o);
+  });
+  if (hasNum[0]) {
+    var o0 = document.createElement("option");
+    o0.value = "0"; o0.textContent = "No rank";
+    sel.appendChild(o0);
+  }
+  // keep prior selection if still valid, else reset to All
+  sel.value = Array.prototype.some.call(sel.options, function (op) { return op.value === prev; }) ? prev : "";
+}
+
+function sortedFilteredSpells() {
+  var q = currentQuery();
+  var rankSel = document.getElementById("rankFilter").value; // "", "0", "1".."3"
+  var minV = parseInt(document.getElementById("lvlMin").value, 10);
+  var maxV = parseInt(document.getElementById("lvlMax").value, 10);
+  if (isNaN(minV)) minV = -Infinity;
+  if (isNaN(maxV)) maxV = Infinity;
+  var list = spells.filter(function (s) {
+    if (s.level < minV || s.level > maxV) return false;
+    if (rankSel !== "" && String(s.rankNum) !== rankSel) return false;
+    if (!q) return true;
+    return s.name.toLowerCase().indexOf(q) !== -1 ||
+           String(s.level).indexOf(q) !== -1 ||
+           s.rank.toLowerCase().indexOf(q) !== -1;
+  });
+  list.sort(function (a, b) {
+    var r;
+    if (sortKey === "level") {
+      r = a.level - b.level;
+      if (r === 0) r = a.name.localeCompare(b.name);
+    } else if (sortKey === "rank") {
+      r = a.rankNum - b.rankNum;
+      if (r === 0) r = a.level - b.level;
+      if (r === 0) r = a.name.localeCompare(b.name);
+    } else {
+      r = a.name.localeCompare(b.name);
+      if (r === 0) r = a.level - b.level;
+    }
+    return r * sortDir;
+  });
+  return list;
+}
+
+function render() {
+  var list = sortedFilteredSpells();
+  var frag = document.createDocumentFragment();
+  list.forEach(function (s) {
+    var tr = document.createElement("tr");
+    if (checked[s.id]) tr.className = "checked";
+
+    var tdChk = document.createElement("td");
+    tdChk.className = "chk";
+    var cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.checked = !!checked[s.id];
+    cb.addEventListener("change", function () {
+      checked[s.id] = cb.checked;
+      tr.className = cb.checked ? "checked" : "";
+      saveState();
+      updateStats();
+    });
+    tdChk.appendChild(cb);
+
+    var tdLvl = document.createElement("td");
+    tdLvl.className = "lvl";
+    tdLvl.textContent = s.level;
+
+    var tdRank = document.createElement("td");
+    tdRank.className = s.rank ? "rank" : "rank none";
+    tdRank.textContent = s.rank || "—";
+
+    var tdName = document.createElement("td");
+    tdName.className = "name";
+    var link = document.createElement("a");
+    link.href = "https://everquest.allakhazam.com/search.html?q=" + encodeURIComponent(s.name);
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.textContent = s.name;
+    tdName.appendChild(link);
+
+    tr.appendChild(tdChk);
+    tr.appendChild(tdLvl);
+    tr.appendChild(tdRank);
+    tr.appendChild(tdName);
+    frag.appendChild(tr);
+  });
+  tbody.innerHTML = "";
+  tbody.appendChild(frag);
+  updateArrows();
+  updateStats(list.length);
+}
+
+function updateArrows() {
+  document.getElementById("arrow-level").textContent = sortKey === "level" ? (sortDir === 1 ? "▲" : "▼") : "";
+  document.getElementById("arrow-rank").textContent = sortKey === "rank" ? (sortDir === 1 ? "▲" : "▼") : "";
+  document.getElementById("arrow-name").textContent = sortKey === "name" ? (sortDir === 1 ? "▲" : "▼") : "";
+}
+
+function updateStats(shown) {
+  if (!spells.length) { statsEl.textContent = "No file loaded."; return; }
+  var done = spells.filter(function (s) { return checked[s.id]; }).length;
+  var total = spells.length;
+  if (shown === undefined) shown = sortedFilteredSpells().length;
+  var showText = (shown !== total) ? (" &middot; showing <b>" + shown + "</b>") : "";
+  statsEl.innerHTML = "<b>" + currentFile + "</b> &middot; <b>" + done + "</b> / <b>" +
+    total + "</b> checked" + showText;
+}
+
+// ---- Events ----
+document.getElementById("fileInput").addEventListener("change", function (e) {
+  var file = e.target.files && e.target.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function () {
+    currentFile = file.name;
+    spells = parseFile(String(reader.result));
+    checked = loadState(currentFile);
+    // Drop saved ids no longer present (keeps storage tidy).
+    var present = {};
+    spells.forEach(function (s) { present[s.id] = true; });
+    Object.keys(checked).forEach(function (k) { if (!present[k]) delete checked[k]; });
+
+    if (spells.length) {
+      table.hidden = false;
+      emptyEl.hidden = true;
+      searchEl.disabled = false;
+      document.getElementById("rankFilter").disabled = false;
+      document.getElementById("lvlMin").disabled = false;
+      document.getElementById("lvlMax").disabled = false;
+      document.getElementById("clearFilters").disabled = false;
+      document.getElementById("uncheckAll").disabled = false;
+      populateRankFilter();
+    } else {
+      table.hidden = true;
+      emptyEl.hidden = false;
+      emptyEl.innerHTML = "No spell entries found in <code>" + file.name + "</code>.";
+    }
+    render();
+  };
+  reader.onerror = function () {
+    emptyEl.innerHTML = "Could not read that file.";
+  };
+  reader.readAsText(file);
+  // allow re-loading the same file name again later
+  e.target.value = "";
+});
+
+searchEl.addEventListener("input", render);
+document.getElementById("rankFilter").addEventListener("change", render);
+document.getElementById("lvlMin").addEventListener("input", render);
+document.getElementById("lvlMax").addEventListener("input", render);
+
+document.getElementById("clearFilters").addEventListener("click", function () {
+  searchEl.value = "";
+  document.getElementById("rankFilter").value = "";
+  document.getElementById("lvlMin").value = "";
+  document.getElementById("lvlMax").value = "";
+  render();
+});
+
+document.querySelectorAll("th.sortable").forEach(function (th) {
+  th.addEventListener("click", function () {
+    var key = th.getAttribute("data-sort");
+    if (sortKey === key) { sortDir = -sortDir; }
+    else { sortKey = key; sortDir = 1; }
+    render();
+  });
+});
+
+document.getElementById("uncheckAll").addEventListener("click", function () {
+  if (!spells.length) return;
+  if (!confirm("Uncheck all spells for " + currentFile + "?")) return;
+  checked = {};
+  saveState();
+  render();
+});
+</script>
+</body>
+</html>
