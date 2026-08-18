@@ -3,38 +3,40 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>EverQuest Missing Spells Checklist</title>
+<meta name="description" content="Load your EverQuest MissingSpells.txt dump to sort, search, and tick off the spells your character still needs to buy or scribe.">
+<title>Missing Spells Checklist — Plane of Knowledge</title>
+<link rel="stylesheet" href="../shared.css">
 <style>
+  /* Local names mapped onto the shared Plane of Knowledge palette. */
   :root {
-    --bg: #14110d;
-    --panel: #1f1a13;
-    --panel-2: #2a2317;
-    --border: #4a3d28;
-    --text: #e8dcc0;
-    --muted: #b09b73;
-    --accent: #d9a441;
-    --accent-dim: #8a6a24;
-    --row-alt: #241e15;
-    --done: #5a4a2a;
+    --bg: var(--bg-deep);
+    --panel: var(--bg-panel);
+    --panel-2: var(--bg-card);
+    --border: var(--gold-border);
+    --text: var(--text-primary);
+    --muted: var(--text-muted);
+    --accent: var(--gold-bright);
+    --accent-dim: var(--gold-dim);
+    --row-alt: #11141c;
+    --done: #211d12;
   }
-  * { box-sizing: border-box; }
   body {
-    margin: 0;
-    font-family: "Segoe UI", Tahoma, sans-serif;
+    padding-top: var(--pok-nav-h);
     background: var(--bg);
     color: var(--text);
     font-size: 15px;
   }
-  header {
+  header.page-header {
     padding: 18px 24px;
-    background: linear-gradient(180deg, #2a2014, #1a150e);
-    border-bottom: 2px solid var(--accent-dim);
+    background: linear-gradient(180deg, var(--bg-panel), var(--bg-base));
+    border-bottom: 2px solid var(--gold-border);
   }
   h1 {
     margin: 0;
-    font-size: 22px;
+    font-family: 'Cinzel', serif;
+    font-size: clamp(1.3rem, 3vw, 1.75rem);
     color: var(--accent);
-    letter-spacing: 0.5px;
+    letter-spacing: 0.05em;
     text-shadow: 0 1px 2px #000;
   }
   .sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
@@ -47,7 +49,7 @@
     background: var(--panel);
     border-bottom: 1px solid var(--border);
     position: sticky;
-    top: 0;
+    top: var(--pok-nav-h);
     z-index: 5;
   }
   .toolbar label.filebtn {
@@ -105,7 +107,7 @@
   table { width: 100%; border-collapse: collapse; }
   thead th {
     position: sticky;
-    top: 56px;
+    top: calc(var(--pok-nav-h) + 56px);
     background: var(--panel-2);
     color: var(--muted);
     text-align: left;
@@ -161,11 +163,17 @@
     font-size: 13px;
   }
   .howto .note { margin-top: 10px; color: #8f7d54; font-size: 12px; }
-  footer { padding: 14px 24px; color: #6f5e3e; font-size: 12px; }
 </style>
 </head>
 <body>
-<header>
+
+<nav class="pok-nav">
+  <a href="../index.html">Plane of Knowledge</a>
+  <span class="sep">/</span>
+  <span class="current">Missing Spells</span>
+</nav>
+
+<header class="page-header">
   <h1>EverQuest &mdash; Missing Spells Checklist</h1>
   <div class="sub">Load a <code>*-MissingSpells.txt</code> file, sort &amp; search, and tick off spells. Your checkmarks are saved per file name.</div>
 </header>
@@ -221,9 +229,10 @@
   </div>
 </div>
 
-<footer>
+<footer class="pok-footer">
   Checkmark state is stored under the file's name (cookie + browser local storage), so reloading the same
   file restores your progress.
+  <br>planeofknowledge.org &nbsp;·&nbsp; EverQuest fan site
 </footer>
 
 <script>
